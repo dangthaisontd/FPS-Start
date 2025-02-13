@@ -3,8 +3,7 @@ using UnityEngine;
 [AddComponentMenu("DangSon/BulletDamageEnemy")]
 public class BulletDamageEnemy : MonoBehaviour
 {
-    public GameObject fx;
-    public GameObject explusionPrefabs;
+   
     public int bulletsDamage = 20;
     private void OnCollisionEnter(Collision objectHit)
     {
@@ -27,14 +26,19 @@ public class BulletDamageEnemy : MonoBehaviour
     private void CreateExplusionEffect(Collision objectHit)
     {
         Destroy(objectHit.gameObject);
-        Instantiate(explusionPrefabs, transform.position, Quaternion.identity);
+        Instantiate(GameReferences.Instance.explusionPrefabs, transform.position, Quaternion.identity);
+        AudioSource audio =  objectHit.gameObject.GetComponent<AudioSource>();
+        if (audio != null)
+        {
+         audio.Play();
+        }
         Destroy(gameObject);
     }
 
     private void CreateBulletImpactEffect(Collision objectHit)
     {
         ContactPoint contact = objectHit.contacts[0];
-        GameObject hole = Instantiate(fx, contact.point, Quaternion.LookRotation(contact.normal));
+        GameObject hole = Instantiate(GameReferences.Instance.fxBulletsPrefabs, contact.point, Quaternion.LookRotation(contact.normal));
         hole.transform.SetParent(objectHit.gameObject.transform);
     }
 }
