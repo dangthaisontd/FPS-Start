@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Diagnostics;
 using UnityEngine;
 [AddComponentMenu("DangSon/Weapon")]
 public class Weapon : MonoBehaviour
@@ -20,7 +22,9 @@ public class Weapon : MonoBehaviour
     public float bulletVelocity = 100f;
     public float bulletPrefabsTime = 3f;
     public int magazineSize = 35;
-    private bool allowReset;
+    [Header("Fire Intensity")]
+    [Range(0, 10f)]
+    public float spreadIntensity;
     [Header("Range")]
     [Range(0f, 2f)]
     public float shootingdelay = 0.5f;
@@ -36,7 +40,12 @@ public class Weapon : MonoBehaviour
     private bool isShoting,readyToShoot;
     private int bulletsLef;
     private float distanceBullet=200f;
-
+    private Animator anim;
+    private int isShotingId;
+    private int isReloadingCenterId;
+    private int isReloadingRightId;
+    private int isReloadingLeftId;
+    private bool allowReset;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {  
@@ -44,6 +53,11 @@ public class Weapon : MonoBehaviour
         bulletsLef = magazineSize;
         readyToShoot = true;
         allowReset = true;
+        anim = GetComponent<Animator>();
+        isShotingId = Animator.StringToHash("IsShooting");
+        isReloadingCenterId = Animator.StringToHash("IsReloadingCenter");
+        isReloadingLeftId = Animator.StringToHash("IsReloadingLeft");
+        isReloadingRightId = Animator.StringToHash("IsReloadingRight");
     }
 
     // Update is called once per frame
@@ -61,11 +75,34 @@ public class Weapon : MonoBehaviour
         {
             FireWeapon();
         }
+        if (Input.GetKeyDown(KeyCode.R)&&bulletsLef<=magazineSize)
+        {
+            Reload();
+        }
     }
+
+    private void Reload()
+    {
+        int rand =UnityEngine.Random.Range(0, 3);
+        switch(rand)
+        {
+            case 0: anim.SetTrigger(isReloadingLeftId);
+                break;
+            case 1:
+                anim.SetTrigger(isReloadingCenterId);
+                break;
+            case 2:
+                anim.SetTrigger(isReloadingRightId);
+                break;
+        }
+        AudioManager.Instance.PlaysfxPlayer(reloadClip);
+    }
+
     private void FireWeapon()
     {
         readyToShoot = false;
         muzlerFlash.Play();
+        anim.SetTrigger(isShotingId);
         AudioManager.Instance.PlaysfxPlayer(shootClip);
         Vector3 shotingDirection = CaculateDirectionAndSpred().normalized;
         GameObject bullet= Instantiate(bulletPrefabs,bulletsPawm.position, Quaternion.identity);
@@ -106,7 +143,9 @@ public class Weapon : MonoBehaviour
             targetPoint = ray.GetPoint(distanceBullet);
         }
         Vector3 direction = targetPoint - bulletsPawm.position;
-        return direction;
+        float z = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
+        float y = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
+        return direction+ new Vector3(0,y,z);
     }
     void ResetShot()
     {
